@@ -196,15 +196,28 @@ export function useDynamicForm(
   }
 
   function onValidate({ name, errors, valid }: ValidationEvent) {
-    const updatedCtrl = findControlByName(name)
+    const updatedCtrl = findControlByName(name);
+  
     if (updatedCtrl) {
+      // Atualiza os erros, removendo campos vazios
       updatedCtrl.errors = removeEmpty({
         ...updatedCtrl.errors,
         ...errors,
-      })
-      updatedCtrl.valid = valid
+      });
+  
+      // Verifica se o valor atende aos critérios (não vazio, não null, não array vazio, não objeto vazio)
+      const value = updatedCtrl.value;
+      const isFieldValid = valid &&
+        value !== '' &&
+        value !== null &&
+        !(Array.isArray(value) && value.length === 0) &&
+        !(typeof value === 'object' && Object.keys(value).length === 0);
+  
+      // Atualiza o estado de valid com a nova verificação
+      updatedCtrl.valid = !updatedCtrl.validations?.length || isFieldValid;
     }
   }
+  
 
   function detectChanges(fields) {
     const changes = diff(cache, deepClone(fields))
